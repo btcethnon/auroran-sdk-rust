@@ -1,0 +1,103 @@
+[package]
+name = "auroran-sdk-rust"
+version = "0.1.0"
+edition = "2021"
+description = "Standalone off-chain client + signing SDK for Auroran chain"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/auroran-exchange/auroran-sdk-rust"
+keywords = ["auroran", "dex", "eip712", "trading", "sdk"]
+categories = ["api-bindings", "cryptography"]
+
+[dependencies]
+alloy = { version = "1.0", default-features = false, features = [
+    "dyn-abi",
+    "sol-types",
+    "signer-local",
+] }
+# L1 msgpack canonical serialization (connection_id computation)
+rmp-serde = "1.0"
+
+# HTTP + WebSocket
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync"] }
+tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+# OS CSPRNG for production key generation (/dev/urandom, BCryptGenRandom, etc.)
+getrandom = "0.3"
+
+# Error handling
+thiserror = "2"
+
+# Hashing (blake3: test key derivation matching chain seed labels)
+blake3 = "1"
+
+# Test support (seeded keys)
+rand = { version = "0.8", optional = true }
+
+[features]
+default = []
+async = []
+test-support = ["dep:rand"]
+
+[lints.clippy]
+too_many_arguments = "allow"
+
+[[example]]
+name = "query"
+path = "examples/query.rs"
+
+[[example]]
+name = "place_order"
+path = "examples/place_order.rs"
+
+[[example]]
+name = "websocket"
+path = "examples/websocket.rs"
+
+[[example]]
+name = "register_agent"
+path = "examples/register_agent.rs"
+
+[[example]]
+name = "e2e_flow"
+path = "examples/e2e_flow.rs"
+
+[[example]]
+name = "block_events"
+path = "examples/block_events.rs"
+
+[[example]]
+name = "async_query"
+path = "examples/async_query.rs"
+required-features = ["async"]
+
+[[test]]
+name = "wire_signing_golden"
+path = "tests/wire_signing_golden.rs"
+
+[[test]]
+name = "wire_payload_golden"
+path = "tests/wire_payload_golden.rs"
+
+[[test]]
+name = "events_parse"
+path = "tests/events_parse.rs"
+
+[[test]]
+name = "async_client"
+path = "tests/async_client.rs"
+required-features = ["async"]
+
+[[test]]
+name = "live_matrix"
+path = "tests/live_matrix.rs"
+
+[[test]]
+name = "ws_integration"
+path = "tests/ws_integration.rs"
