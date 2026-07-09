@@ -79,4 +79,18 @@ impl ClientError {
     pub fn is_resource_not_found(&self) -> bool {
         self.rpc_code() == Some(-32004)
     }
+
+    /// Parsed business reject reason from [`ClientError::TxRejected`] or auth `-32010` RPC data.
+    pub fn reject_reason(&self) -> Option<crate::events::RejectReason> {
+        match self {
+            Self::TxRejected { reason, .. } => reason
+                .as_ref()
+                .and_then(|v| crate::events::RejectReason::from_value(v).ok()),
+            Self::Rpc { code, data, .. } if *code == -32010 => data.as_ref().and_then(|d| {
+                d.get("reason")
+                    .and_then(|v| crate::events::RejectReason::from_value(v).ok())
+            }),
+            _ => None,
+        }
+    }
 }

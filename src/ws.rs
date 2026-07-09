@@ -285,7 +285,7 @@ pub struct TriggerUpdateItem {
     #[serde(default)]
     pub pair_id: Option<u64>,
     #[serde(default)]
-    pub reason: Option<String>,
+    pub reason: Option<serde_json::Value>,
     #[serde(default)]
     pub side: Option<Side>,
     #[serde(default)]
@@ -316,8 +316,8 @@ impl TriggerUpdateItem {
         if !matches!(self.kind, TriggerUpdateKind::Cancelled) {
             return None;
         }
-        let tag = self.reason.as_ref()?;
-        serde_json::from_value(serde_json::Value::String(tag.clone())).ok()
+        let value = self.reason.as_ref()?;
+        parse_pascal_case_tag(value)
     }
 
     /// `oco_resolved` updates carry `OcoResolveReason`.
@@ -325,22 +325,42 @@ impl TriggerUpdateItem {
         if !matches!(self.kind, TriggerUpdateKind::OcoResolved) {
             return None;
         }
-        let tag = self.reason.as_ref()?;
-        serde_json::from_value(serde_json::Value::String(tag.clone())).ok()
+        let value = self.reason.as_ref()?;
+        parse_pascal_case_tag(value)
     }
 
-    /// `fire_failed` updates carry `RejectReason` (Debug tag or JSON object string).
+    /// `fire_failed` updates carry projected [`RejectReason`] (ADR-0026 JSON object).
     pub fn fire_failed_reason(&self) -> Option<RejectReason> {
         if !matches!(self.kind, TriggerUpdateKind::FireFailed) {
             return None;
         }
-        let raw = self.reason.as_ref()?;
-        if let Ok(value) = serde_json::from_str::<serde_json::Value>(raw) {
-            return RejectReason::from_value(&value).ok();
+        let value = self.reason.as_ref()?;
+        if let Ok(reason) = RejectReason::from_value(value) {
+            return Some(reason);
         }
-        let head = raw.split([' ', '{']).next().unwrap_or(raw);
-        RejectReason::from_value(&serde_json::json!({ head: null })).ok()
+        // Legacy string debug tag (pre-projection nodes).
+        if let serde_json::Value::String(s) = value {
+            let head = s.split([' ', '{']).next().unwrap_or(s.as_str());
+            return RejectReason::from_value(&serde_json::json!({ head: null })).ok();
+        }
+        None
     }
+}
+
+/// Parse a PascalCase unit enum tag from WS `reason` (`"ByOwner"` or `{"ByOwner": null}`).
+fn parse_pascal_case_tag<T: serde::de::DeserializeOwned>(value: &serde_json::Value) -> Option<T> {
+    if let Ok(v) = serde_json::from_value(value.clone()) {
+        return Some(v);
+    }
+    let tag = match value {
+        serde_json::Value::String(s) => serde_json::Value::String(s.clone()),
+        serde_json::Value::Object(map) if map.len() == 1 => {
+            let (tag, _) = map.iter().next()?;
+            serde_json::Value::String(tag.clone())
+        }
+        _ => return None,
+    };
+    serde_json::from_value(tag).ok()
 }
 
 #[derive(Debug, Clone, Deserialize)]

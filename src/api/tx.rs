@@ -23,6 +23,13 @@ impl TxReceiptResponse {
         self.status == "accepted"
     }
 
+    /// Parsed kept-reject / auth reason when present (`status == "kept-reject"`).
+    pub fn reject_reason(&self) -> Option<crate::events::RejectReason> {
+        self.reason
+            .as_ref()
+            .and_then(|v| crate::events::RejectReason::from_value(v).ok())
+    }
+
     /// Returns `Err` when the node kept the envelope but rejected execution (`kept-reject`).
     pub fn ensure_accepted(self) -> Result<Self, crate::error::ClientError> {
         if self.is_accepted() {

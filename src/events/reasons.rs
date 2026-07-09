@@ -5,11 +5,11 @@ use serde_json::Value;
 
 use crate::wire::MarginMode;
 
-/// Business reject reason (`Core::Rejected`, `BatchItemRejected`, `TriggerFireFailed`).
+/// Business reject reason (`Core::Rejected`, `BatchItemRejected`, `TriggerFireFailed`,
+/// tx `result.reason`, WS `fire_failed`, auth `-32010`).
 ///
-/// In **event** payloads, `InsufficientBalance.required` / `have` are ADR-0026 decimal
-/// strings. Tx `result.reason` may use raw integers for the same variant — use
-/// [`RejectReason::from_value`] if you need to parse either shape.
+/// Numeric payload fields such as `InsufficientBalance.required` / `have` are ADR-0026
+/// decimal strings everywhere on the public API.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum RejectReason {

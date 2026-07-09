@@ -1,8 +1,9 @@
 //! Unit tests for WS ↔ events integration helpers (no network).
 
 use auroran_sdk_rust::{
-    parse_block_events_response, BlockEventsResponse, DoneReason, MarketId, OrderUpdateItem,
-    OrderUpdateKind, TriggerCancelReason, TriggerUpdateItem, TriggerUpdateKind,
+    parse_block_events_response, parse_ws_message, BlockEventsResponse, DoneReason, MarketId,
+    OrderUpdateItem, OrderUpdateKind, RejectReason, TriggerCancelReason, TriggerUpdateItem,
+    TriggerUpdateKind, WsMessage,
 };
 
 #[test]
@@ -27,7 +28,7 @@ fn order_update_done_reason_parses_pascal_case_tag() {
 }
 
 #[test]
-fn trigger_update_cancel_reason_parses() {
+fn trigger_update_cancel_reason_parses_string_tag() {
     let item = TriggerUpdateItem {
         block_height: 1,
         event_seq: 1,
@@ -36,7 +37,7 @@ fn trigger_update_cancel_reason_parses() {
         symbol: None,
         trigger_id: Some(7),
         pair_id: None,
-        reason: Some("ByOwner".into()),
+        reason: Some(serde_json::json!("ByOwner")),
         side: None,
         order_type: None,
         qty: None,
@@ -53,7 +54,33 @@ fn trigger_update_cancel_reason_parses() {
 }
 
 #[test]
-fn trigger_fire_failed_reason_parses_debug_tag() {
+fn trigger_update_cancel_reason_parses_externally_tagged_object() {
+    let item = TriggerUpdateItem {
+        block_height: 1,
+        event_seq: 1,
+        kind: TriggerUpdateKind::Cancelled,
+        market_id: MarketId(1),
+        symbol: None,
+        trigger_id: Some(7),
+        pair_id: None,
+        reason: Some(serde_json::json!({"ByOwner": null})),
+        side: None,
+        order_type: None,
+        qty: None,
+        trigger_price: None,
+        trigger_direction: None,
+        limit_price: None,
+        tif: None,
+        reduce_only: None,
+        client_order_id: None,
+        expires_at_ms: None,
+        client_pair_id: None,
+    };
+    assert_eq!(item.cancel_reason(), Some(TriggerCancelReason::ByOwner));
+}
+
+#[test]
+fn trigger_fire_failed_reason_parses_string_debug_tag() {
     let item = TriggerUpdateItem {
         block_height: 1,
         event_seq: 1,
@@ -62,7 +89,7 @@ fn trigger_fire_failed_reason_parses_debug_tag() {
         symbol: None,
         trigger_id: Some(7),
         pair_id: None,
-        reason: Some("NonceMismatch".into()),
+        reason: Some(serde_json::json!("NonceMismatch")),
         side: None,
         order_type: None,
         qty: None,
@@ -79,6 +106,71 @@ fn trigger_fire_failed_reason_parses_debug_tag() {
         item.fire_failed_reason().map(|r| r.tag().to_string()),
         Some("NonceMismatch".to_string())
     );
+}
+
+#[test]
+fn trigger_fire_failed_reason_parses_projected_reject_object() {
+    let item = TriggerUpdateItem {
+        block_height: 1,
+        event_seq: 1,
+        kind: TriggerUpdateKind::FireFailed,
+        market_id: MarketId(1),
+        symbol: None,
+        trigger_id: Some(7),
+        pair_id: None,
+        reason: Some(serde_json::json!({
+            "InsufficientBalance": { "required": "10.000000", "have": "1.000000" }
+        })),
+        side: None,
+        order_type: None,
+        qty: None,
+        trigger_price: None,
+        trigger_direction: None,
+        limit_price: None,
+        tif: None,
+        reduce_only: None,
+        client_order_id: None,
+        expires_at_ms: None,
+        client_pair_id: None,
+    };
+    let reason = item.fire_failed_reason().expect("projected reject");
+    assert!(matches!(
+        reason,
+        RejectReason::InsufficientBalance { required, have }
+        if required == "10.000000" && have == "1.000000"
+    ));
+}
+
+#[test]
+fn parse_trigger_updates_push_with_fire_failed_object_reason() {
+    let text = serde_json::json!({
+        "topic": "triggerUpdates.0x1111222233334444555566667777888899990000",
+        "address": "0x1111222233334444555566667777888899990000",
+        "height": 42,
+        "timestamp_ms": 1_700_000_000_000u64,
+        "updates": [{
+            "block_height": 42,
+            "event_seq": 3,
+            "kind": "fire_failed",
+            "market_id": 1,
+            "symbol": "BTC-USDT",
+            "trigger_id": 7,
+            "reason": {
+                "InsufficientBalance": { "required": "5.000000", "have": "0.000000" }
+            }
+        }]
+    })
+    .to_string();
+
+    let msg = parse_ws_message(&text).expect("triggerUpdates frame");
+    let WsMessage::TriggerUpdates(push) = msg else {
+        panic!("expected TriggerUpdates");
+    };
+    assert_eq!(push.updates.len(), 1);
+    let reason = push.updates[0]
+        .fire_failed_reason()
+        .expect("fire_failed reason");
+    assert!(matches!(reason, RejectReason::InsufficientBalance { .. }));
 }
 
 #[test]
