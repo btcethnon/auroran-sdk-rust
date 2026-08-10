@@ -1,4 +1,7 @@
-//! REST alias responses use the same `{height, data, page?}` skeleton as JSON-RPC reads.
+//! REST alias methods delegate to the JSON-RPC reads (`getMarkets` / `getAllMarks`
+//! etc.) since the browser/explorer layer merged into the node and the plural
+//! market GETs switched to the Explorer hot-read wrapper. The chain reads keep
+//! the `{height, data, page?}` skeleton parsed below.
 
 use auroran_sdk_rust::{AuroranClient, ClientError, MarketListItem, QueryResult, TxReceiptResponse};
 
@@ -64,6 +67,7 @@ fn client_error_resource_not_found() {
 fn rest_markets_live() {
     let rpc = std::env::var("AURORAN_RPC_URL").unwrap_or_else(|_| "https://rpc.auroran.io".into());
     let client = AuroranClient::new(&rpc).expect("client");
+    // RPC-backed wrapper methods (getMarkets / getAllMarks through `/api/v1/query`).
     let markets = client.markets_rest().expect("markets_rest");
     assert!(!markets.is_empty(), "expected at least one market from {rpc}");
     let marks = client.marks_rest().expect("marks_rest");

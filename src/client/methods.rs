@@ -849,9 +849,17 @@ macro_rules! impl_auroran_client_methods {
     }
 
     // ── REST aliases (cacheable GET) ───────────────────────────────────────
+    //
+    // The plural market GETs (`/api/v1/markets`, `/api/v1/bbos`,
+    // `/api/v1/marks`, `/api/v1/markets/{symbol}/summary`) were moved to the
+    // Explorer hot-read wrapper when the browser layer merged into the node;
+    // the `*_rest` methods below delegate to the JSON-RPC read methods, which
+    // keep the `{height, data}` skeleton and the full field set. The singular
+    // chain aliases (`market_rest` / `orderbook_rest` / `stats_rest`) still use
+    // GET with the chain skeleton.
 
     pub fn markets_rest(&self) -> Result<Vec<MarketListItem>, ClientError> {
-        self.get_query_data("/api/v1/markets")
+        self.list_markets()
     }
 
     pub fn market_rest(&self, symbol: &str) -> Result<MarketDetailResponse, ClientError> {
@@ -872,15 +880,15 @@ macro_rules! impl_auroran_client_methods {
     }
 
     pub fn market_summary_rest(&self, symbol: &str) -> Result<MarketSummaryResponse, ClientError> {
-        self.get_query_data(&format!("/api/v1/markets/{symbol}/summary"))
+        self.market_summary(symbol)
     }
 
     pub fn bbos_rest(&self) -> Result<Vec<AllBboItem>, ClientError> {
-        self.get_query_data("/api/v1/bbos")
+        self.all_bbos()
     }
 
     pub fn marks_rest(&self) -> Result<std::collections::BTreeMap<String, String>, ClientError> {
-        self.get_query_data($crate::routes::GET_MARKS)
+        self.all_marks()
     }
 
     pub fn stats_rest(&self) -> Result<GlobalStatsResponse, ClientError> {
@@ -1760,9 +1768,17 @@ macro_rules! impl_auroran_client_methods {
     }
 
     // ── REST aliases (cacheable GET) ───────────────────────────────────────
+    //
+    // The plural market GETs (`/api/v1/markets`, `/api/v1/bbos`,
+    // `/api/v1/marks`, `/api/v1/markets/{symbol}/summary`) were moved to the
+    // Explorer hot-read wrapper when the browser layer merged into the node;
+    // the `*_rest` methods below delegate to the JSON-RPC read methods, which
+    // keep the `{height, data}` skeleton and the full field set. The singular
+    // chain aliases (`market_rest` / `orderbook_rest` / `stats_rest`) still use
+    // GET with the chain skeleton.
 
     pub async fn markets_rest(&self) -> Result<Vec<MarketListItem>, ClientError> {
-        self.get_query_data("/api/v1/markets").await
+        self.list_markets().await
     }
 
     pub async fn market_rest(&self, symbol: &str) -> Result<MarketDetailResponse, ClientError> {
@@ -1782,16 +1798,21 @@ macro_rules! impl_auroran_client_methods {
         self.get_query_data(&path).await
     }
 
-    pub async fn market_summary_rest(&self, symbol: &str) -> Result<MarketSummaryResponse, ClientError> {
-        self.get_query_data(&format!("/api/v1/markets/{symbol}/summary")).await
+    pub async fn market_summary_rest(
+        &self,
+        symbol: &str,
+    ) -> Result<MarketSummaryResponse, ClientError> {
+        self.market_summary(symbol).await
     }
 
     pub async fn bbos_rest(&self) -> Result<Vec<AllBboItem>, ClientError> {
-        self.get_query_data("/api/v1/bbos").await
+        self.all_bbos().await
     }
 
-    pub async fn marks_rest(&self) -> Result<std::collections::BTreeMap<String, String>, ClientError> {
-        self.get_query_data($crate::routes::GET_MARKS).await
+    pub async fn marks_rest(
+        &self,
+    ) -> Result<std::collections::BTreeMap<String, String>, ClientError> {
+        self.all_marks().await
     }
 
     pub async fn stats_rest(&self) -> Result<GlobalStatsResponse, ClientError> {
