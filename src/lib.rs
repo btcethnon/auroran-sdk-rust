@@ -92,14 +92,14 @@ pub use client::{
     BlockEventsResponse, BlockResponse, BookView, BootstrapResponse, BridgeDepositResponse,
     BridgeDepositsListResponse, BridgeSettlementResponse, BridgeWithdrawalResponse,
     BridgeWithdrawalsListResponse, CandleResponse, CloseReason, DepositRecord, DepositStatus,
-    EstimatedLiquidationResponse, ExchangeConfigResponse, FillRecord, GlobalStatsResponse,
+    EstimatedLiquidationResponse, ExchangeConfigResponse, FillCursor, FillRecord, GlobalStatsResponse,
     HealthResponse, HttpExchange, LiquidatablePosition, ListAccountsFilter, ListAccountsResponse, MarketDetailResponse,
-    MarketListItem, MarketStatsHistoryResponse, MarketStatsRecord, MarketSummaryResponse, OcoLegs,
+    MarketListItem, MarketSettingsResponse, MarketStatsHistoryResponse, MarketStatsRecord, MarketSummaryResponse, OcoLegs,
     OcoPairResponse, OcoPairsResponse, OcoStatus, OrderLifecycleStatus, OrderStatusResponse,
     OrderbookLevelResponse, OrderbookResponse, Page, PositionRecord, QueryResult,
     QuoteHistorySample, ReferralResponse, RestingOrderSummary, StatsHistorySample, TopAccountItem,
     TradeResponse, TriggerOrderResponse, TriggerOrderType, TriggerOrdersResponse,
-    TxReceiptResponse, UserFeesResponse, UserFillResponse, UserRateLimitResponse, WithdrawRecord,
+    TxReceiptResponse, UserFeesResponse, UserFillResponse, UserFillsSinceResponse, UserRateLimitResponse, WithdrawRecord,
     WithdrawStatus, DEFAULT_TIMEOUT_SECS,
 };
 
@@ -110,18 +110,20 @@ pub use client::tx_recorder;
 // ── Builders ──────────────────────────────────────────────────────────────
 
 pub use builders::{
-    activate_market, amend_market_config, amend_order, amend_order_full, amend_trigger_order,
-    amend_trigger_order_full, batch_amend_trigger, batch_modify, batch_place_order,
-    batch_submit_oracle_quote, cancel_oco, cancel_order, cancel_trigger_order, close_position_full,
-    close_position_market, complete_delist, create_market, credit_deposit, halt_market, liquidate,
-    mass_cancel_ids, mass_cancel_owner, mass_cancel_side, place_oco, place_order, place_order_full,
-    place_order_with_coid, place_trigger_order, record_deposit, record_deposit_with_meta,
-    register_agent, register_referrer,
-    request_delist, resume_market, revoke_agent, schedule_cancel, set_account_rebate_ratio,
-    set_account_role, set_emergency_halt, set_fee_recipient, set_global_rebate_ratio,
-    set_inviter_keep_ratio, set_isolated_margin, set_leverage, set_margin_mode, set_referrer,
-    set_settlement_paused, set_user_fee_rate, submit_oracle_quote, withdraw_refund,
-    withdraw_request, withdraw_settle, withdraw_settle_with_tx,
+    activate_market, activate_market_by_id, amend_market_config, amend_market_config_by_id,
+    amend_order, amend_order_full, amend_trigger_order, amend_trigger_order_full,
+    batch_amend_trigger, batch_modify, batch_place_order, batch_submit_oracle_quote, cancel_market,
+    cancel_market_by_id, cancel_oco, cancel_order, cancel_trigger_order, close_position_full,
+    close_position_market, complete_delist, complete_delist_by_id, create_market, credit_deposit,
+    halt_market, halt_market_by_id, liquidate, mass_cancel_ids, mass_cancel_owner, mass_cancel_side,
+    place_oco, place_order, place_order_full, place_order_with_coid, place_trigger_order,
+    record_deposit, record_deposit_with_meta, register_agent, register_referrer, request_delist,
+    request_delist_by_id, resume_market, resume_market_by_id, revoke_agent, schedule_cancel,
+    set_account_rebate_ratio, set_account_role, set_emergency_halt, set_emergency_halt_by_id,
+    set_fee_recipient, set_fee_recipient_by_id, set_global_rebate_ratio, set_inviter_keep_ratio,
+    set_isolated_margin, set_leverage, set_margin_mode, set_referrer, set_settlement_paused,
+    set_user_fee_rate, submit_oracle_quote, withdraw_refund, withdraw_request, withdraw_settle,
+    withdraw_settle_with_tx,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -165,8 +167,9 @@ pub use error::{ClientError, JsonRpcError};
 // ── WebSocket ─────────────────────────────────────────────────────────────
 
 pub use ws::{
-    parse_ws_message, topics as ws_topics, AccountPush, BboPush, BlockTipPush, BookPush,
-    ExternalQuotePush, MarksPush, OrderUpdateItem, OrderUpdateKind, OrderUpdatesPush, SubscribeAck,
-    TradeItem, TradesPush, TriggerUpdateItem, TriggerUpdateKind, TriggerUpdatesPush, UserFillItem,
-    UserFillsPush, WsClient, WsError, WsMessage,
+    parse_ws_message, topics as ws_topics, AccountPush, BboPush, BlockTipPush, BlocksLiveBlockHeader,
+    BlocksLiveEnvelope, BlocksLivePush, BookPush, CandlePush, ExternalQuotePush, HlCandle, MarksPush,
+    OrderUpdateItem, OrderUpdateKind, OrderUpdatesPush, SubscribeAck, TradeItem, TradesPush,
+    TriggerUpdateItem, TriggerUpdateKind, TriggerUpdatesPush, UserFillItem, UserFillsPush, WsClient,
+    WsError, WsMessage,
 };

@@ -66,7 +66,7 @@ High-level trading utilities:
 
 ## Events (`events` module)
 
-All **62** chain event variants (7 domains) have typed structs under [`events`](src/events/mod.rs) and matching `EventEnvelope::as_*()` accessors. Numeric fields are decimal strings (ADR-0026 projection).
+All **62** chain event variants (7 domains) have typed structs under [`events`](src/events/mod.rs) and matching `EventEnvelope::as_*()` accessors. Numeric fields are decimal strings (ADR-0026 projection). `Ops::MarketCancelled` is included; `Exec::OracleQuoteRejected` was removed with time-anchored quotes.
 
 - Shell (crate root): [`EventEnvelope`], [`EventDomain`], [`EventKind`], reason enums, `parse_*`, `find_*`
 - Typed tree: `ev.kind()` → `EventKind::Exec(ExecEventKind::Filled(...))`
@@ -90,7 +90,7 @@ Duplicate variant names across domains (e.g. `OcoPairResolved` in `Oco` vs `Trig
 
 WS topics push derived views (book, order updates, …), not full `EventEnvelope` JSON. To stream typed chain events:
 
-1. Subscribe to `block` via [`WsClient`]
+1. Subscribe to `block` via [`WsClient`] (or `blocks.live` / `candles.{symbol}.{interval}` for explorer pushes)
 2. On each [`BlockTipPush`], call [`events_for_block_tip`] (sync) or [`events_for_block_tip_async`] (`feature = "async"`)
 
 ```rust

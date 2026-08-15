@@ -366,7 +366,6 @@ pub struct OracleQuote {
     pub ask_price: DecimalStr,
     pub mark_price: DecimalStr,
     pub source_ts_ms: u64,
-    pub sequence_id: u64,
     pub quoter: Address20,
     #[serde(default)]
     pub last_price: Option<DecimalStr>,

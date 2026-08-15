@@ -201,6 +201,12 @@ macro_rules! impl_auroran_client_methods {
             .map(|qr: QueryResult<MarketDetailResponse>| qr.data)
     }
 
+    /// `getMarketById` — point lookup by market id (duplicate-symbol admin targeting).
+    pub fn market_by_id(&self, market_id: u32) -> Result<MarketDetailResponse, ClientError> {
+        self.rpc_query("getMarketById", serde_json::json!({ "market_id": market_id }))
+            .map(|qr: QueryResult<MarketDetailResponse>| qr.data)
+    }
+
     // ── Account ────────────────────────────────────────────────────────────
 
     pub fn account(&self, address: &str) -> Result<AccountSummaryResponse, ClientError> {
@@ -409,6 +415,87 @@ macro_rules! impl_auroran_client_methods {
             params["limit"] = serde_json::Value::from(l);
         }
         self.rpc_query("getUserFills", params)
+            .map(|qr: QueryResult<Vec<UserFillResponse>>| qr.data)
+    }
+
+    /// Incremental fill sync: fills strictly after `cursor`, oldest → newest.
+    pub fn user_fills_since(
+        &self,
+        address: &str,
+        symbol: Option<&str>,
+        cursor: Option<&FillCursor>,
+        limit: Option<usize>,
+    ) -> Result<UserFillsSinceResponse, ClientError> {
+        let mut params = serde_json::json!({ "address": address });
+        if let Some(s) = symbol {
+            params["symbol"] = serde_json::Value::from(s);
+        }
+        if let Some(c) = cursor {
+            params["cursor"] = serde_json::json!({
+                "block_height": c.block_height,
+                "event_seq": c.event_seq,
+                "order_id": c.order_id,
+            });
+        }
+        if let Some(l) = limit {
+            params["limit"] = serde_json::Value::from(l);
+        }
+        self.rpc_query("getUserFillsSince", params)
+            .map(|qr: QueryResult<UserFillsSinceResponse>| qr.data)
+    }
+
+    /// Account × market margin preferences (defaults when no chain record exists).
+    pub fn market_settings(
+        &self,
+        address: &str,
+        symbol: &str,
+    ) -> Result<MarketSettingsResponse, ClientError> {
+        self.rpc_query(
+            "getMarketSettings",
+            serde_json::json!({ "address": address, "symbol": symbol }),
+        )
+        .map(|qr: QueryResult<MarketSettingsResponse>| qr.data)
+    }
+
+    /// Fill details for one order, by chain order id.
+    pub fn order_fills_by_id(
+        &self,
+        order_id: u64,
+        offset: Option<usize>,
+        limit: Option<usize>,
+    ) -> Result<Vec<UserFillResponse>, ClientError> {
+        let mut params = serde_json::json!({ "order_id": order_id });
+        if let Some(o) = offset {
+            params["offset"] = serde_json::Value::from(o);
+        }
+        if let Some(l) = limit {
+            params["limit"] = serde_json::Value::from(l);
+        }
+        self.rpc_query("getOrderFills", params)
+            .map(|qr: QueryResult<Vec<UserFillResponse>>| qr.data)
+    }
+
+    /// Fill details for one order, by client order id (requires address + symbol).
+    pub fn order_fills_by_cloid(
+        &self,
+        address: &str,
+        symbol: &str,
+        client_order_id: &str,
+        offset: Option<usize>,
+        limit: Option<usize>,
+    ) -> Result<Vec<UserFillResponse>, ClientError> {
+        let mut params = serde_json::json!({
+            "address": address,
+            "symbol": symbol,
+            "client_order_id": client_order_id,
+        });
+        if let Some(o) = offset {
+            params["offset"] = serde_json::Value::from(o);
+        }
+        if let Some(l) = limit {
+            params["limit"] = serde_json::Value::from(l);
+        }
+        self.rpc_query("getOrderFills", params)
             .map(|qr: QueryResult<Vec<UserFillResponse>>| qr.data)
     }
 
@@ -1117,6 +1204,12 @@ macro_rules! impl_auroran_client_methods {
             .map(|qr: QueryResult<MarketDetailResponse>| qr.data)
     }
 
+    /// `getMarketById` — point lookup by market id (duplicate-symbol admin targeting).
+    pub async fn market_by_id(&self, market_id: u32) -> Result<MarketDetailResponse, ClientError> {
+        self.rpc_query("getMarketById", serde_json::json!({ "market_id": market_id })).await
+            .map(|qr: QueryResult<MarketDetailResponse>| qr.data)
+    }
+
     // ── Account ────────────────────────────────────────────────────────────
 
     pub async fn account(&self, address: &str) -> Result<AccountSummaryResponse, ClientError> {
@@ -1325,6 +1418,87 @@ macro_rules! impl_auroran_client_methods {
             params["limit"] = serde_json::Value::from(l);
         }
         self.rpc_query("getUserFills", params).await
+            .map(|qr: QueryResult<Vec<UserFillResponse>>| qr.data)
+    }
+
+    /// Incremental fill sync: fills strictly after `cursor`, oldest → newest.
+    pub async fn user_fills_since(
+        &self,
+        address: &str,
+        symbol: Option<&str>,
+        cursor: Option<&FillCursor>,
+        limit: Option<usize>,
+    ) -> Result<UserFillsSinceResponse, ClientError> {
+        let mut params = serde_json::json!({ "address": address });
+        if let Some(s) = symbol {
+            params["symbol"] = serde_json::Value::from(s);
+        }
+        if let Some(c) = cursor {
+            params["cursor"] = serde_json::json!({
+                "block_height": c.block_height,
+                "event_seq": c.event_seq,
+                "order_id": c.order_id,
+            });
+        }
+        if let Some(l) = limit {
+            params["limit"] = serde_json::Value::from(l);
+        }
+        self.rpc_query("getUserFillsSince", params).await
+            .map(|qr: QueryResult<UserFillsSinceResponse>| qr.data)
+    }
+
+    /// Account × market margin preferences (defaults when no chain record exists).
+    pub async fn market_settings(
+        &self,
+        address: &str,
+        symbol: &str,
+    ) -> Result<MarketSettingsResponse, ClientError> {
+        self.rpc_query(
+            "getMarketSettings",
+            serde_json::json!({ "address": address, "symbol": symbol }),
+        ).await
+        .map(|qr: QueryResult<MarketSettingsResponse>| qr.data)
+    }
+
+    /// Fill details for one order, by chain order id.
+    pub async fn order_fills_by_id(
+        &self,
+        order_id: u64,
+        offset: Option<usize>,
+        limit: Option<usize>,
+    ) -> Result<Vec<UserFillResponse>, ClientError> {
+        let mut params = serde_json::json!({ "order_id": order_id });
+        if let Some(o) = offset {
+            params["offset"] = serde_json::Value::from(o);
+        }
+        if let Some(l) = limit {
+            params["limit"] = serde_json::Value::from(l);
+        }
+        self.rpc_query("getOrderFills", params).await
+            .map(|qr: QueryResult<Vec<UserFillResponse>>| qr.data)
+    }
+
+    /// Fill details for one order, by client order id (requires address + symbol).
+    pub async fn order_fills_by_cloid(
+        &self,
+        address: &str,
+        symbol: &str,
+        client_order_id: &str,
+        offset: Option<usize>,
+        limit: Option<usize>,
+    ) -> Result<Vec<UserFillResponse>, ClientError> {
+        let mut params = serde_json::json!({
+            "address": address,
+            "symbol": symbol,
+            "client_order_id": client_order_id,
+        });
+        if let Some(o) = offset {
+            params["offset"] = serde_json::Value::from(o);
+        }
+        if let Some(l) = limit {
+            params["limit"] = serde_json::Value::from(l);
+        }
+        self.rpc_query("getOrderFills", params).await
             .map(|qr: QueryResult<Vec<UserFillResponse>>| qr.data)
     }
 

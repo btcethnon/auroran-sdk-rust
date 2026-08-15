@@ -46,5 +46,6 @@ pub(crate) fn action_method_name(action: &Action) -> &'static str {
         Action::BatchModify(_) => "BatchModify",
         Action::BatchAmendTrigger(_) => "BatchAmendTrigger",
         Action::BatchSubmitOracleQuote(_) => "BatchSubmitOracleQuote",
+        Action::CancelMarket(_) => "CancelMarket",
     }
 }

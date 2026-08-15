@@ -41,6 +41,28 @@ pub struct UserFillResponse {
     pub order_id: Option<u64>,
     #[serde(default)]
     pub client_order_id: Option<String>,
+    /// Present when the fill was promoted from a trigger order.
+    #[serde(default)]
+    pub source_trigger_id: Option<u64>,
+    /// First `PlaceTriggerOrder` tx hash (`0x…`); only when the fill is trigger-sourced.
+    #[serde(default)]
+    pub source_tx_hash: Option<String>,
+}
+
+/// Keyset cursor for incremental fill sync (`getUserFillsSince`).
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct FillCursor {
+    pub block_height: u64,
+    pub event_seq: u64,
+    pub order_id: u64,
+}
+
+/// Incremental fill page (`getUserFillsSince`).
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UserFillsSinceResponse {
+    pub fills: Vec<UserFillResponse>,
+    #[serde(default)]
+    pub next_cursor: Option<FillCursor>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]

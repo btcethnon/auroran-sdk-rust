@@ -276,14 +276,6 @@ pub struct OracleQuoteAcceptedEvent {
     pub last_price: String,
     pub volume: String,
     pub source_ts_ms: u64,
-    pub sequence_id: u64,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct OracleQuoteRejectedEvent {
-    pub market_id: MarketId,
-    pub quoter: Address20,
-    pub reason: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -491,6 +483,11 @@ pub struct MarketLifecycleChangedEvent {
     pub market_id: MarketId,
     pub from: MarketLifecycle,
     pub to: MarketLifecycle,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct MarketCancelledEvent {
+    pub market_id: MarketId,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]

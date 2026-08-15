@@ -47,17 +47,25 @@ pub struct CreateMarketAction {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SimpleMarketAction {
     pub symbol: String,
+    /// Prefer this over `symbol` when present (duplicate-symbol admin targeting).
+    /// `skip_serializing_if` keeps old symbol-only envelopes byte-identical.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub market_id: Option<MarketId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SetFeeRecipientAction {
     pub symbol: String,
     pub recipient: Address20,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub market_id: Option<MarketId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AmendMarketConfigAction {
     pub symbol: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub market_id: Option<MarketId>,
     pub max_leverage: Option<u32>,
     pub maker_fee_rate: Option<DecimalStr>,
     pub taker_fee_rate: Option<DecimalStr>,
@@ -69,6 +77,8 @@ pub struct AmendMarketConfigAction {
 pub struct SetEmergencyHaltAction {
     pub symbol: String,
     pub halt: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub market_id: Option<MarketId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -207,7 +217,6 @@ pub struct SubmitOracleQuoteAction {
     pub ask_price: DecimalStr,
     pub mark_price: DecimalStr,
     pub source_ts_ms: u64,
-    pub sequence_id: u64,
     pub last_price: DecimalStr,
     pub volume: DecimalStr,
 }
@@ -310,7 +319,7 @@ pub struct BatchSubmitOracleQuoteAction {
     pub quotes: Vec<SubmitOracleQuoteAction>,
 }
 
-/// Aggregated business Action — mirrors Auroran chain protocol (44 variants).
+/// Aggregated business Action — mirrors Auroran chain protocol (45 variants).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Action {
     PlaceOrder(PlaceOrderAction),
@@ -357,4 +366,6 @@ pub enum Action {
     BatchModify(BatchModifyAction),
     BatchAmendTrigger(BatchAmendTriggerAction),
     BatchSubmitOracleQuote(BatchSubmitOracleQuoteAction),
+    /// Cancel an un-activated market (`Created → Delisted`; master-only).
+    CancelMarket(SimpleMarketAction),
 }

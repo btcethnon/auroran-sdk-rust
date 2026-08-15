@@ -201,3 +201,61 @@ fn parse_block_events_response_skips_invalid() {
     assert_eq!(parsed.len(), 1);
     assert_eq!(parsed[0].path(), Some(("Exec", "LeverageUpdated")));
 }
+
+#[test]
+fn parse_blocks_live_push() {
+    let text = serde_json::json!({
+        "topic": "blocks.live",
+        "block": {
+            "height": 10,
+            "digest": "0xabc",
+            "timestamp_ms": 1_700_000_000_000u64,
+            "state_root": "0xdef",
+            "envelope_count": 2,
+            "event_count": 5
+        },
+        "envelopes": [{
+            "tx_hash": "0x1111",
+            "height": 10,
+            "idx": 0,
+            "action_kind": "PlaceOrder",
+            "signer": "0x1111222233334444555566667777888899990000",
+            "timestamp_ms": 1_700_000_000_000u64
+        }],
+        "watermark": 10,
+        "block_count": 1
+    })
+    .to_string();
+    let msg = parse_ws_message(&text).expect("blocks.live frame");
+    let WsMessage::BlocksLive(push) = msg else {
+        panic!("expected BlocksLive");
+    };
+    assert_eq!(push.block.height, 10);
+    assert_eq!(push.envelopes.len(), 1);
+    assert_eq!(push.envelopes[0].action_kind, "PlaceOrder");
+}
+
+#[test]
+fn parse_candle_push() {
+    let text = serde_json::json!({
+        "topic": "candles.BTC-USDT.1m",
+        "data": {
+            "t": 1_700_000_000_000u64,
+            "i": "1m",
+            "o": "100.0",
+            "c": "101.0",
+            "h": "102.0",
+            "l": "99.0",
+            "v": "3.5",
+            "n": 4
+        }
+    })
+    .to_string();
+    let msg = parse_ws_message(&text).expect("candles frame");
+    let WsMessage::Candle(push) = msg else {
+        panic!("expected Candle");
+    };
+    assert_eq!(push.topic, "candles.BTC-USDT.1m");
+    assert_eq!(push.data.i, "1m");
+    assert_eq!(push.data.c, "101.0");
+}

@@ -22,14 +22,14 @@ pub use crate::api::{
     BlockResponse, BookView, BootstrapResponse, BridgeDepositResponse, BridgeDepositsListResponse,
     BridgeSettlementResponse, BridgeWithdrawalResponse, BridgeWithdrawalsListResponse,
     CandleResponse, CloseReason, DepositRecord, DepositStatus, EstimatedLiquidationResponse,
-    ExchangeConfigResponse, FillRecord, GlobalStatsResponse, HealthResponse, LiquidatablePosition,
+    ExchangeConfigResponse, FillCursor, FillRecord, GlobalStatsResponse, HealthResponse, LiquidatablePosition,
     ListAccountsFilter, ListAccountsResponse, MarketDetailResponse, MarketListItem,
-    MarketStatsHistoryResponse, MarketStatsRecord, MarketSummaryResponse, OcoLegs, OcoPairResponse,
+    MarketSettingsResponse, MarketStatsHistoryResponse, MarketStatsRecord, MarketSummaryResponse, OcoLegs, OcoPairResponse,
     OcoPairsResponse, OcoStatus, OrderLifecycleStatus, OrderStatusResponse,
     OrderbookLevelResponse, OrderbookResponse, PositionRecord, QuoteHistorySample, ReferralResponse,
     RestingOrderSummary, StatsHistorySample, TopAccountItem, TradeResponse, TriggerOrderResponse,
     TriggerOrderType, TriggerOrdersResponse, TxReceiptResponse, UserFeesResponse, UserFillResponse,
-    UserRateLimitResponse, WithdrawRecord, WithdrawStatus,
+    UserFillsSinceResponse, UserRateLimitResponse, WithdrawRecord, WithdrawStatus,
 };
 
 pub use crate::client_common::{Page, QueryResult};

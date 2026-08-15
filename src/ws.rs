@@ -22,6 +22,12 @@ pub mod topics {
     pub fn block() -> String {
         "block".into()
     }
+    pub fn blocks_live() -> String {
+        "blocks.live".into()
+    }
+    pub fn candles(symbol: &str, interval: &str) -> String {
+        format!("candles.{symbol}.{interval}")
+    }
     pub fn book(symbol: &str) -> String {
         format!("book.{symbol}")
     }
@@ -95,6 +101,67 @@ pub struct BlockTipPush {
     pub state_root: String,
     pub envelope_count: usize,
     pub event_count: usize,
+}
+
+/// Full block header inside a `blocks.live` frame (Explorer browser-layer push).
+#[derive(Debug, Clone, Deserialize)]
+pub struct BlocksLiveBlockHeader {
+    pub height: u64,
+    pub digest: String,
+    #[serde(default)]
+    pub parent: Option<String>,
+    pub timestamp_ms: u64,
+    pub state_root: String,
+    #[serde(default)]
+    pub signer: Option<String>,
+    pub envelope_count: u64,
+    pub event_count: u64,
+}
+
+/// Slimmed envelope view inside a `blocks.live` frame (`strip_for_push`).
+#[derive(Debug, Clone, Deserialize)]
+pub struct BlocksLiveEnvelope {
+    pub tx_hash: String,
+    pub height: u64,
+    pub idx: u64,
+    pub action_kind: String,
+    pub signer: String,
+    pub timestamp_ms: u64,
+}
+
+/// Full new-block push (`{"op":"subscribe","topics":["blocks.live"]}`).
+#[derive(Debug, Clone, Deserialize)]
+pub struct BlocksLivePush {
+    pub topic: String,
+    pub block: BlocksLiveBlockHeader,
+    #[serde(default)]
+    pub envelopes: Vec<BlocksLiveEnvelope>,
+    pub watermark: u64,
+    pub block_count: u64,
+    #[serde(default)]
+    pub node_tip: Option<u64>,
+    #[serde(default)]
+    pub behind: Option<u64>,
+}
+
+/// Hyperliquid-compatible candle payload inside a `candles.*` push.
+#[derive(Debug, Clone, Deserialize)]
+pub struct HlCandle {
+    pub t: u64,
+    pub i: String,
+    pub o: String,
+    pub c: String,
+    pub h: String,
+    pub l: String,
+    pub v: String,
+    pub n: u64,
+}
+
+/// Real-time candle push (`candles.{symbol}.{interval}` topic).
+#[derive(Debug, Clone, Deserialize)]
+pub struct CandlePush {
+    pub topic: String,
+    pub data: HlCandle,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -377,6 +444,8 @@ pub enum WsMessage {
     Subscribed(SubscribeAck),
     Error(WsError),
     Block(BlockTipPush),
+    BlocksLive(BlocksLivePush),
+    Candle(CandlePush),
     Book(BookPush),
     Trades(TradesPush),
     Account(AccountPush),
@@ -409,6 +478,12 @@ pub fn parse_ws_message(text: &str) -> Result<WsMessage, ClientError> {
         })?;
     if topic == "block" {
         return Ok(WsMessage::Block(serde_json::from_value(v)?));
+    }
+    if topic == "blocks.live" {
+        return Ok(WsMessage::BlocksLive(serde_json::from_value(v)?));
+    }
+    if topic.starts_with("candles.") {
+        return Ok(WsMessage::Candle(serde_json::from_value(v)?));
     }
     if topic.starts_with("book.") {
         return Ok(WsMessage::Book(serde_json::from_value(v)?));

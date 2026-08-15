@@ -1,4 +1,4 @@
-//! Convenience constructors for all 44 `Action` variants.
+//! Convenience constructors for all 45 `Action` variants.
 
 use crate::wire::{
     AccountRole, Action, Address20, AmendMarketConfigAction, AmendOrderAction,
@@ -6,6 +6,7 @@ use crate::wire::{
     BatchSubmitOracleQuoteAction, CancelOcoAction, CancelOrderAction, CancelTriggerOrderAction,
     ClientOrderId, ClosePositionAction, CreateMarketAction, CreditDepositAction, DecimalStr,
     DepositSeq, ExternalDepositRef, ExternalTxRef, IdemKey, LiquidateAction, MarginMode, MarketConfig,
+    MarketId,
     MassCancelAction, MassCancelScopeAction, OcoExecution, PairId, PlaceOcoAction,
     PlaceOrderAction, PlaceTriggerOrderAction, RecordDepositAction, RegisterAgentAction,
     RegisterReferrerAction, RevokeAgentAction, ScheduleCancelAction, SetAccountRebateRatioAction,
@@ -188,30 +189,42 @@ pub fn create_market(config: MarketConfig) -> Action {
 pub fn activate_market(symbol: impl Into<String>) -> Action {
     Action::ActivateMarket(SimpleMarketAction {
         symbol: symbol.into(),
+        market_id: None,
     })
 }
 
 pub fn halt_market(symbol: impl Into<String>) -> Action {
     Action::HaltMarket(SimpleMarketAction {
         symbol: symbol.into(),
+        market_id: None,
     })
 }
 
 pub fn resume_market(symbol: impl Into<String>) -> Action {
     Action::ResumeMarket(SimpleMarketAction {
         symbol: symbol.into(),
+        market_id: None,
     })
 }
 
 pub fn request_delist(symbol: impl Into<String>) -> Action {
     Action::RequestDelist(SimpleMarketAction {
         symbol: symbol.into(),
+        market_id: None,
     })
 }
 
 pub fn complete_delist(symbol: impl Into<String>) -> Action {
     Action::CompleteDelist(SimpleMarketAction {
         symbol: symbol.into(),
+        market_id: None,
+    })
+}
+
+pub fn cancel_market(symbol: impl Into<String>) -> Action {
+    Action::CancelMarket(SimpleMarketAction {
+        symbol: symbol.into(),
+        market_id: None,
     })
 }
 
@@ -219,6 +232,7 @@ pub fn set_fee_recipient(symbol: impl Into<String>, recipient: Address20) -> Act
     Action::SetFeeRecipient(SetFeeRecipientAction {
         symbol: symbol.into(),
         recipient,
+        market_id: None,
     })
 }
 
@@ -232,6 +246,7 @@ pub fn amend_market_config(
 ) -> Action {
     Action::AmendMarketConfig(AmendMarketConfigAction {
         symbol: symbol.into(),
+        market_id: None,
         max_leverage,
         maker_fee_rate: maker_fee_rate.map(|v| v.into()),
         taker_fee_rate: taker_fee_rate.map(|v| v.into()),
@@ -244,6 +259,86 @@ pub fn set_emergency_halt(symbol: impl Into<String>, halt: bool) -> Action {
     Action::SetEmergencyHalt(SetEmergencyHaltAction {
         symbol: symbol.into(),
         halt,
+        market_id: None,
+    })
+}
+
+// ── Market lifecycle / admin — market_id targeting (duplicate-symbol) ──
+
+pub fn activate_market_by_id(market_id: MarketId) -> Action {
+    Action::ActivateMarket(SimpleMarketAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+    })
+}
+
+pub fn halt_market_by_id(market_id: MarketId) -> Action {
+    Action::HaltMarket(SimpleMarketAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+    })
+}
+
+pub fn resume_market_by_id(market_id: MarketId) -> Action {
+    Action::ResumeMarket(SimpleMarketAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+    })
+}
+
+pub fn request_delist_by_id(market_id: MarketId) -> Action {
+    Action::RequestDelist(SimpleMarketAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+    })
+}
+
+pub fn complete_delist_by_id(market_id: MarketId) -> Action {
+    Action::CompleteDelist(SimpleMarketAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+    })
+}
+
+pub fn cancel_market_by_id(market_id: MarketId) -> Action {
+    Action::CancelMarket(SimpleMarketAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+    })
+}
+
+pub fn set_fee_recipient_by_id(market_id: MarketId, recipient: Address20) -> Action {
+    Action::SetFeeRecipient(SetFeeRecipientAction {
+        symbol: String::new(),
+        recipient,
+        market_id: Some(market_id),
+    })
+}
+
+pub fn set_emergency_halt_by_id(market_id: MarketId, halt: bool) -> Action {
+    Action::SetEmergencyHalt(SetEmergencyHaltAction {
+        symbol: String::new(),
+        halt,
+        market_id: Some(market_id),
+    })
+}
+
+pub fn amend_market_config_by_id(
+    market_id: MarketId,
+    max_leverage: Option<u32>,
+    maker_fee_rate: Option<impl Into<DecimalStr>>,
+    taker_fee_rate: Option<impl Into<DecimalStr>>,
+    margin_table: Option<Vec<crate::wire::MarginTier>>,
+    mark_max_change_bps: Option<u32>,
+) -> Action {
+    Action::AmendMarketConfig(AmendMarketConfigAction {
+        symbol: String::new(),
+        market_id: Some(market_id),
+        max_leverage,
+        maker_fee_rate: maker_fee_rate.map(|v| v.into()),
+        taker_fee_rate: taker_fee_rate.map(|v| v.into()),
+        margin_table,
+        mark_max_change_bps,
     })
 }
 
@@ -311,7 +406,6 @@ pub fn submit_oracle_quote(
     ask_price: impl Into<DecimalStr>,
     mark_price: impl Into<DecimalStr>,
     source_ts_ms: u64,
-    sequence_id: u64,
     last_price: impl Into<DecimalStr>,
     volume: impl Into<DecimalStr>,
 ) -> Action {
@@ -322,7 +416,6 @@ pub fn submit_oracle_quote(
         ask_price: ask_price.into(),
         mark_price: mark_price.into(),
         source_ts_ms,
-        sequence_id,
         last_price: last_price.into(),
         volume: volume.into(),
     })

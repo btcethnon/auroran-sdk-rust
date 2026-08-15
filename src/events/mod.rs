@@ -159,7 +159,6 @@ impl EventEnvelope {
     event_accessor!(as_margin_mode_updated, MarginModeUpdatedEvent, "Exec", "MarginModeUpdated");
     event_accessor!(as_position_force_closed_at_mark, PositionForceClosedAtMarkEvent, "Exec", "PositionForceClosedAtMark");
     event_accessor!(as_oracle_quote_accepted, OracleQuoteAcceptedEvent, "Exec", "OracleQuoteAccepted");
-    event_accessor!(as_oracle_quote_rejected, OracleQuoteRejectedEvent, "Exec", "OracleQuoteRejected");
     event_accessor!(as_oracle_counter_depleted, OracleCounterDepletedEvent, "Exec", "OracleCounterDepleted");
     event_accessor!(as_market_halted_quote_stale, MarketHaltedQuoteStaleEvent, "Exec", "MarketHaltedQuoteStale");
     event_accessor!(as_market_resumed_after_quote, MarketResumedAfterQuoteEvent, "Exec", "MarketResumedAfterQuote");
@@ -186,6 +185,7 @@ impl EventEnvelope {
     event_accessor!(as_emergency_halt_changed, EmergencyHaltChangedEvent, "Ops", "EmergencyHaltChanged");
     event_accessor!(as_market_created, MarketCreatedEvent, "Ops", "MarketCreated");
     event_accessor!(as_market_lifecycle_changed, MarketLifecycleChangedEvent, "Ops", "MarketLifecycleChanged");
+    event_accessor!(as_market_cancelled, MarketCancelledEvent, "Ops", "MarketCancelled");
     event_accessor!(as_fee_recipient_changed, FeeRecipientChangedEvent, "Ops", "FeeRecipientChanged");
     event_accessor!(as_market_config_amended, MarketConfigAmendedEvent, "Ops", "MarketConfigAmended");
     event_accessor!(as_global_rebate_ratio_changed, GlobalRebateRatioChangedEvent, "Ops", "GlobalRebateRatioChanged");

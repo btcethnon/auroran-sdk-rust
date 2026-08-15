@@ -86,6 +86,16 @@ pub struct AccountOrdersResponse {
     pub orders: Vec<RestingOrderSummary>,
 }
 
+/// Account × market margin preferences (`getMarketSettings`).
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MarketSettingsResponse {
+    pub address: Address20,
+    pub symbol: String,
+    pub margin_mode: MarginMode,
+    pub leverage: u32,
+    pub isolated_margin: String,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct FillRecord {
     pub block_height: u64,

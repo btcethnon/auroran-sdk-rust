@@ -10,12 +10,21 @@ pub struct MarketListItem {
     pub kind: String,
     pub lifecycle: String,
     pub emergency_halt: bool,
+    /// Current `Halted` cause: `"Admin"` / `"QuoteStale"` / `None`.
+    #[serde(default)]
+    pub halt_reason: Option<String>,
     pub price_decimals: u32,
     pub size_decimals: u32,
     pub max_leverage: u32,
     pub mark_price: String,
     #[serde(default)]
     pub prev_day_price: String,
+    /// Open interest (= long size, size decimals).
+    #[serde(default)]
+    pub open_interest: String,
+    /// Open interest notional (SCALE_6).
+    #[serde(default)]
+    pub open_interest_notional: String,
     #[serde(default)]
     pub day_ntl_volume: String,
     #[serde(default)]
@@ -40,7 +49,6 @@ pub struct OracleQuoteResponse {
     pub ask_price: String,
     pub mark_price: String,
     pub source_ts_ms: u64,
-    pub sequence_id: u64,
     pub quoter: Address20,
     /// 外部参考市场最新成交价（仅 WS tick 携带；HTTP 查询 latest_quote 不含）。
     #[serde(default)]
@@ -54,6 +62,9 @@ pub struct OracleQuoteResponse {
 pub struct MarketDetailResponse {
     pub config: MarketConfig,
     pub emergency_halt: bool,
+    /// Current `Halted` cause (same as [`MarketListItem::halt_reason`]).
+    #[serde(default)]
+    pub halt_reason: Option<String>,
     pub latest_quote: Option<OracleQuoteResponse>,
     pub last_stats: Option<MarketStatsRecord>,
     pub mark_price: String,
