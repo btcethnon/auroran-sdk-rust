@@ -82,6 +82,7 @@ pub enum CloseReason {
     GtdExpired,
     FokRejected,
     MarketDelisted,
+    AmendClampedAtFilled,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -450,6 +450,7 @@ pub enum DoneReason {
     GtdExpired,
     FokRejected,
     MarketDelisted,
+    AmendClampedAtFilled,
 }
 
 /// Trigger / OCO trigger-leg cancel reason.
