@@ -259,3 +259,71 @@ fn parse_candle_push() {
     assert_eq!(push.data.i, "1m");
     assert_eq!(push.data.c, "101.0");
 }
+
+#[test]
+fn parse_user_fills_push_keeps_symbol_and_client_order_id() {
+    let text = serde_json::json!({
+        "topic": "userFills.0x1111222233334444555566667777888899990000",
+        "address": "0x1111222233334444555566667777888899990000",
+        "height": 12346,
+        "timestamp_ms": 1_717_200_001_000u64,
+        "fills": [{
+            "block_height": 12346,
+            "event_seq": 3,
+            "timestamp_ms": 1_717_200_001_000u64,
+            "market_id": 1,
+            "symbol": "BTC-USDT",
+            "order_id": 1001,
+            "client_order_id": "my-cloid-1",
+            "price": "97234.50",
+            "qty": "0.50000",
+            "notional": "48617.250000",
+            "fee": "24.308625",
+            "is_taker": true,
+            "aggressor_side": "Bid"
+        }]
+    })
+    .to_string();
+    let msg = parse_ws_message(&text).expect("userFills frame");
+    let WsMessage::UserFills(push) = msg else {
+        panic!("expected UserFills");
+    };
+    assert_eq!(push.fills.len(), 1);
+    let fill = &push.fills[0];
+    assert_eq!(fill.symbol, "BTC-USDT");
+    assert_eq!(fill.order_id, 1001);
+    assert_eq!(fill.client_order_id.as_deref(), Some("my-cloid-1"));
+    assert_eq!(fill.timestamp_ms, 1_717_200_001_000);
+    assert!(fill.is_taker);
+}
+
+#[test]
+fn parse_user_fills_push_defaults_missing_wire_ids() {
+    let text = serde_json::json!({
+        "topic": "userFills.0x1111222233334444555566667777888899990000",
+        "address": "0x1111222233334444555566667777888899990000",
+        "height": 1,
+        "timestamp_ms": 1,
+        "fills": [{
+            "block_height": 1,
+            "event_seq": 1,
+            "market_id": 1,
+            "price": "1",
+            "qty": "1",
+            "notional": "1",
+            "fee": "0",
+            "is_taker": false,
+            "aggressor_side": "Ask"
+        }]
+    })
+    .to_string();
+    let msg = parse_ws_message(&text).expect("userFills frame");
+    let WsMessage::UserFills(push) = msg else {
+        panic!("expected UserFills");
+    };
+    let fill = &push.fills[0];
+    assert!(fill.symbol.is_empty());
+    assert_eq!(fill.order_id, 0);
+    assert!(fill.client_order_id.is_none());
+    assert_eq!(fill.timestamp_ms, 0);
+}

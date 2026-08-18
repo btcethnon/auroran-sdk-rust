@@ -244,17 +244,30 @@ pub struct BboPush {
     pub best_ask: Option<String>,
 }
 
+/// One own-book fill. Mirrors zepto-chain `UserFillItem` (WS `userFills.*`).
 #[derive(Debug, Clone, Deserialize)]
 pub struct UserFillItem {
     pub block_height: u64,
     pub event_seq: u64,
+    #[serde(default)]
+    pub timestamp_ms: u64,
     pub market_id: MarketId,
+    #[serde(default)]
+    pub symbol: String,
+    #[serde(default)]
+    pub order_id: u64,
+    #[serde(default)]
+    pub client_order_id: Option<String>,
     pub price: String,
     pub qty: String,
     pub notional: String,
     pub fee: String,
     pub is_taker: bool,
     pub aggressor_side: Side,
+    #[serde(default)]
+    pub source_trigger_id: Option<u64>,
+    #[serde(default)]
+    pub source_tx_hash: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
