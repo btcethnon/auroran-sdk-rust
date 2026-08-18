@@ -35,11 +35,13 @@ pub enum RejectReason {
         have: String,
     },
     NotionalOverflow,
+    DustNotionalFill,
     FeeOverflow,
     NegativeFeeRate,
     OrderNotFound,
     CancelOwnerMismatch,
     RuntimeRejected,
+    FokRejected,
     DuplicateClientOrderId,
     MarginTableEmpty,
     NotionalExceedsAllTiers,
@@ -209,6 +211,7 @@ impl RejectReason {
             "DecimalPrecisionExceeded" => Ok(Self::DecimalPrecisionExceeded),
             "PriceQtyOverflow" => Ok(Self::PriceQtyOverflow),
             "NotionalOverflow" => Ok(Self::NotionalOverflow),
+            "DustNotionalFill" => Ok(Self::DustNotionalFill),
             "FeeOverflow" => Ok(Self::FeeOverflow),
             "NegativeFeeRate" => Ok(Self::NegativeFeeRate),
             "OrderNotFound" => Ok(Self::OrderNotFound),
@@ -298,9 +301,10 @@ impl RejectReason {
             "BatchSizeInvalid" => Ok(Self::BatchSizeInvalid),
             "DmsTriggerTooSoon" => Ok(Self::DmsTriggerTooSoon),
             "ExecutionFault" => Ok(Self::ExecutionFault),
+            "FokRejected" => Ok(Self::FokRejected),
             "RebateRatioOwnerNotReferrer" => Ok(Self::RebateRatioOwnerNotReferrer),
             "MissingAccountForInviterKeepRatio" => Ok(Self::MissingAccountForInviterKeepRatio),
-            "PostOnlyRejected" | "FokRejected" | "InvalidCommand" | "EventBudgetExceeded" => {
+            "PostOnlyRejected" | "InvalidCommand" | "EventBudgetExceeded" => {
                 Ok(Self::Unknown(value.clone()))
             }
             other => Ok(Self::Unknown(serde_json::json!({ other: payload.clone() }))),
@@ -336,6 +340,7 @@ impl RejectReason {
             Self::DecimalPrecisionExceeded => "DecimalPrecisionExceeded",
             Self::PriceQtyOverflow => "PriceQtyOverflow",
             Self::NotionalOverflow => "NotionalOverflow",
+            Self::DustNotionalFill => "DustNotionalFill",
             Self::FeeOverflow => "FeeOverflow",
             Self::NegativeFeeRate => "NegativeFeeRate",
             Self::OrderNotFound => "OrderNotFound",
@@ -425,6 +430,7 @@ impl RejectReason {
             Self::BatchSizeInvalid => "BatchSizeInvalid",
             Self::DmsTriggerTooSoon => "DmsTriggerTooSoon",
             Self::ExecutionFault => "ExecutionFault",
+            Self::FokRejected => "FokRejected",
             Self::RebateRatioOwnerNotReferrer => "RebateRatioOwnerNotReferrer",
             Self::MissingAccountForInviterKeepRatio => "MissingAccountForInviterKeepRatio",
         }

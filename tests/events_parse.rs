@@ -1,6 +1,6 @@
 use auroran_sdk_rust::{
     events_in_domain, find_rejected, parse_event, parse_receipt_events, EventDomain, EventEnvelope,
-    MarketId, Side, TxReceiptResponse,
+    MarketId, RejectReason, Side, TxReceiptResponse,
 };
 
 #[test]
@@ -89,6 +89,43 @@ fn rejected_event_parses_typed_reason() {
         other => panic!("unexpected reason: {other:?}"),
     }
     assert!(ev.kind().is_some());
+}
+
+#[test]
+fn rejected_event_parses_dust_and_fok_reasons() {
+    let dust = serde_json::json!({
+        "seq": 6,
+        "block_height": 104,
+        "envelope_idx": 0,
+        "kind": {
+            "Core": {
+                "Rejected": {
+                    "action_kind": "PlaceOrder",
+                    "reason": { "DustNotionalFill": null }
+                }
+            }
+        }
+    });
+    let ev = parse_event(&dust).unwrap();
+    assert!(matches!(ev.as_rejected().unwrap().reason, RejectReason::DustNotionalFill));
+
+    let fok = serde_json::json!({
+        "seq": 7,
+        "block_height": 105,
+        "envelope_idx": 0,
+        "kind": {
+            "Core": {
+                "Rejected": {
+                    "action_kind": "PlaceOrder",
+                    "reason": { "FokRejected": null }
+                }
+            }
+        }
+    });
+    let ev = parse_event(&fok).unwrap();
+    assert!(matches!(ev.as_rejected().unwrap().reason, RejectReason::FokRejected));
+    assert_eq!(RejectReason::FokRejected.tag(), "FokRejected");
+    assert_eq!(RejectReason::DustNotionalFill.tag(), "DustNotionalFill");
 }
 
 #[test]
